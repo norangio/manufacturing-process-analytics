@@ -1,0 +1,16 @@
+[Unit]
+Description=Manufacturing Process Analytics Streamlit App
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/manufacturing-process-analytics
+Environment=PATH=/opt/manufacturing-process-analytics/venv/bin:/usr/bin
+Environment=STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+ExecStart=/opt/manufacturing-process-analytics/venv/bin/streamlit run /opt/manufacturing-process-analytics/app.py --server.address 127.0.0.1 --server.port 8502 --server.headless true
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

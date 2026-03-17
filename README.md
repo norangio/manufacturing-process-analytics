@@ -35,15 +35,30 @@ streamlit run app.py
 
 The app will open in your browser at `http://localhost:8501`
 
-### Streamlit Community Cloud Deployment
+### Hetzner VPS Deployment
 
-1. Push this repository to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Click "New app" and select your repository
-4. Set the main file path to `app.py`
-5. Click "Deploy"
+This repo can deploy to the same Hetzner server pattern used by the other `norangio.dev` apps. Running two Streamlit apps on the same box is fine as long as each one has its own port and systemd service. This app is configured for:
 
-The app will be live at `https://your-app-name.streamlit.app`
+- Domain: `mfg.norangio.dev`
+- App directory: `/opt/manufacturing-process-analytics`
+- systemd service: `manufacturing-process-analytics`
+- Streamlit bind address: `127.0.0.1:8502`
+
+#### Required GitHub Actions secrets
+
+- `VPS_HOST`
+- `VPS_USER`
+- `VPS_SSH_KEY`
+
+#### One-time VPS setup
+
+1. Add the DNS record:
+   - `mfg.norangio.dev -> <your-vps-ip>`
+2. Add the Caddy block from `deploy/Caddyfile.snippet` to `/etc/caddy/Caddyfile`
+3. Reload Caddy:
+   - `sudo systemctl reload caddy`
+
+After that, pushing to `main` will deploy the app through `.github/workflows/deploy.yml`.
 
 ## 📊 Dashboard Pages
 
@@ -91,6 +106,14 @@ manufacturing-process-analytics/
 ├── app.py                 # Main Streamlit application
 ├── requirements.txt       # Python dependencies
 ├── README.md             # This file
+├── AGENTS.md             # Local project/deploy notes
+├── .github/
+│   └── workflows/
+│       └── deploy.yml    # GitHub Actions VPS deploy
+├── deploy/
+│   ├── server-deploy.sh  # Runs on the VPS
+│   ├── manufacturing-process-analytics.service
+│   └── Caddyfile.snippet
 └── src/
     ├── __init__.py
     ├── data/
