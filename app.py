@@ -50,42 +50,43 @@ st.set_page_config(
 )
 
 # Custom CSS for professional styling
-st.markdown(f"""
+CUSTOM_CSS = """
 <style>
     .stApp, .stApp * {{
-        font-family: {FONT_FAMILY};
+        font-family: {font_family};
     }}
-    .main-header {
+    .main-header {{
         font-size: 2.2rem;
         font-weight: 700;
         color: #1f77b4;
         margin-bottom: 0.5rem;
-    }
-    .sub-header {
+    }}
+    .sub-header {{
         font-size: 1rem;
         color: #666;
         margin-bottom: 2rem;
-    }
-    .metric-card {
+    }}
+    .metric-card {{
         background-color: #f8f9fa;
         border-radius: 8px;
         padding: 1rem;
         border-left: 4px solid #1f77b4;
-    }
-    .alert-card {
+    }}
+    .alert-card {{
         background-color: #fff3cd;
         border-radius: 8px;
         padding: 1rem;
         border-left: 4px solid #ffc107;
-    }
-    .stTabs [data-baseweb="tab-list"] {
+    }}
+    .stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
+    }}
+    .stTabs [data-baseweb="tab"] {{
         padding: 10px 20px;
-    }
+    }}
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(CUSTOM_CSS.format(font_family=FONT_FAMILY), unsafe_allow_html=True)
 
 
 @st.cache_data(ttl=3600)
