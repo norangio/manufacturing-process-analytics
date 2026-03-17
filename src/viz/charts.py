@@ -35,13 +35,24 @@ COLORS = {
     "cusum_neg": "#1f77b4"
 }
 
+FONT_FAMILY = "Calibri, Carlito, Segoe UI, Arial, sans-serif"
+
 LAYOUT_DEFAULTS = {
-    "font": {"family": "Arial, sans-serif", "size": 12},
+    "font": {"family": FONT_FAMILY, "size": 12},
     "paper_bgcolor": "white",
     "plot_bgcolor": "white",
     "margin": {"l": 60, "r": 40, "t": 60, "b": 60},
     "hovermode": "x unified"
 }
+
+
+def apply_chart_style(fig: go.Figure, title_x: float = 0.5) -> go.Figure:
+    """Apply the shared visual defaults used across dashboard charts."""
+    title = fig.layout.title.to_plotly_json() if fig.layout.title else {}
+    title["x"] = title_x
+    fig.update_layout(**LAYOUT_DEFAULTS)
+    fig.update_layout(title=title)
+    return fig
 
 
 def create_control_chart(

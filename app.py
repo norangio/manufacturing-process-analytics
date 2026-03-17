@@ -30,20 +30,31 @@ from src.viz.charts import (
     create_control_chart, create_mr_chart, create_imr_chart,
     create_ewma_chart, create_cusum_chart, create_capability_histogram,
     create_run_chart, create_time_series, create_kpi_gauge,
-    create_heatmap, create_box_plot, create_driver_importance_chart
+    create_heatmap, create_box_plot, create_driver_importance_chart,
+    apply_chart_style
 )
+
+FONT_FAMILY = 'Calibri, Carlito, "Segoe UI", Arial, sans-serif'
+PAGE_OVERVIEW = "Overview"
+PAGE_BATCH_EXPLORER = "Batch Explorer"
+PAGE_SPC = "SPC / Control Charts"
+PAGE_CAPABILITY = "Capability Analysis"
+PAGE_TRENDS = "Trends & Drivers"
+PAGE_ABOUT = "About"
 
 # Page configuration
 st.set_page_config(
     page_title="Manufacturing Analytics Dashboard",
-    page_icon="🏭",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # Custom CSS for professional styling
-st.markdown("""
+st.markdown(f"""
 <style>
+    .stApp, .stApp * {{
+        font-family: {FONT_FAMILY};
+    }}
     .main-header {
         font-size: 2.2rem;
         font-weight: 700;
@@ -105,14 +116,14 @@ def apply_filters(df, products, sites, date_range, shifts):
 def render_sidebar():
     """Render sidebar with navigation and filters."""
     with st.sidebar:
-        st.markdown("## 🏭 Manufacturing Analytics")
+        st.markdown("## Manufacturing Analytics")
         st.markdown("---")
 
         # Navigation
         page = st.radio(
             "Navigate to:",
-            ["📊 Overview", "🔍 Batch Explorer", "📈 SPC / Control Charts",
-             "🎯 Capability Analysis", "📉 Trends & Drivers", "ℹ️ About"],
+            [PAGE_OVERVIEW, PAGE_BATCH_EXPLORER, PAGE_SPC,
+             PAGE_CAPABILITY, PAGE_TRENDS, PAGE_ABOUT],
             label_visibility="collapsed"
         )
 
@@ -184,11 +195,12 @@ def render_overview(batch_df, step_df):
         fig = px.bar(site_stats, x="site", y="pass_rate", color="site",
                      title="QC Pass Rate by Site (%)", text_auto=".1f")
         fig.update_layout(showlegend=False)
+        apply_chart_style(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Alerts section
     st.markdown("---")
-    st.subheader("🚨 Recent Alerts Summary")
+    st.subheader("Recent Alerts Summary")
 
     # Get SPC alerts for yield
     alert_summary = get_alert_summary(batch_df, "yield_pct", ["site"])
@@ -265,13 +277,13 @@ def render_batch_explorer(batch_df, step_df):
             st.write(f"**Shift:** {batch_info['shift']}")
             st.write(f"**Operator:** {batch_info['operator_id']}")
 
-            status = "✅ PASSED" if batch_info["passed_qc"] else "❌ FAILED"
+            status = "PASSED" if batch_info["passed_qc"] else "FAILED"
             st.markdown(f"**QC Status:** {status}")
 
             if batch_info.get("bad_lot_event"):
-                st.warning("⚠️ Bad lot event detected")
+                st.warning("Bad lot event detected")
             if batch_info.get("maintenance_event"):
-                st.info("🔧 Post-maintenance batch")
+                st.info("Post-maintenance batch")
 
         with col2:
             st.markdown("#### Process Step Metrics")
@@ -295,30 +307,30 @@ def generate_batch_narrative(batch_info, batch_steps, all_batches):
 
     # Overall assessment
     if batch_info["passed_qc"]:
-        narratives.append("✅ **Overall:** This batch passed all QC specifications.")
+        narratives.append("**Overall:** This batch passed all QC specifications.")
     else:
-        narratives.append("❌ **Overall:** This batch failed QC specifications.")
+        narratives.append("**Overall:** This batch failed QC specifications.")
 
     # Yield comparison
     avg_yield = all_batches["yield_pct"].mean()
     yield_diff = batch_info["yield_pct"] - avg_yield
     if abs(yield_diff) > 5:
         direction = "above" if yield_diff > 0 else "below"
-        narratives.append(f"📊 **Yield:** {batch_info['yield_pct']:.1f}% is {abs(yield_diff):.1f}% {direction} the overall average of {avg_yield:.1f}%.")
+        narratives.append(f"**Yield:** {batch_info['yield_pct']:.1f}% is {abs(yield_diff):.1f}% {direction} the overall average of {avg_yield:.1f}%.")
     else:
-        narratives.append(f"📊 **Yield:** {batch_info['yield_pct']:.1f}% is within normal range (avg: {avg_yield:.1f}%).")
+        narratives.append(f"**Yield:** {batch_info['yield_pct']:.1f}% is within normal range (avg: {avg_yield:.1f}%).")
 
     # Impurity check
     if batch_info["impurity_pct"] > 3:
-        narratives.append(f"⚠️ **Impurity:** Elevated impurity level ({batch_info['impurity_pct']:.2f}%) detected.")
+        narratives.append(f"**Impurity:** Elevated impurity level ({batch_info['impurity_pct']:.2f}%) detected.")
 
     # Temperature excursions
     if batch_info["total_temp_excursions"] > 0:
-        narratives.append(f"🌡️ **Temperature:** {batch_info['total_temp_excursions']} temperature excursion(s) recorded during processing.")
+        narratives.append(f"**Temperature:** {batch_info['total_temp_excursions']} temperature excursion(s) recorded during processing.")
 
     # Deviations
     if batch_info["total_deviations"] > 0:
-        narratives.append(f"📝 **Deviations:** {batch_info['total_deviations']} deviation(s) documented for this batch.")
+        narratives.append(f"**Deviations:** {batch_info['total_deviations']} deviation(s) documented for this batch.")
 
     return "\n\n".join(narratives)
 
@@ -367,7 +379,7 @@ def render_spc_charts(batch_df, step_df):
 
             # Alert summary
             if i_result.alerts:
-                st.warning(f"⚠️ {len(i_result.alerts)} control chart violation(s) detected")
+                st.warning(f"{len(i_result.alerts)} control chart violation(s) detected")
                 alert_types = [a[1].value for a in i_result.alerts]
                 st.caption(f"Alert types: {', '.join(set(alert_types))}")
 
@@ -379,7 +391,7 @@ def render_spc_charts(batch_df, step_df):
             st.plotly_chart(fig, use_container_width=True)
 
             if result.alerts:
-                st.warning(f"⚠️ {len(result.alerts)} EWMA signal(s) detected - potential process drift")
+                st.warning(f"{len(result.alerts)} EWMA signal(s) detected - potential process drift")
 
         else:  # CUSUM
             target = metric_specs.get("target")
@@ -388,12 +400,12 @@ def render_spc_charts(batch_df, step_df):
             st.plotly_chart(fig, use_container_width=True)
 
             if result.alerts:
-                st.warning(f"⚠️ {len(result.alerts)} CUSUM signal(s) detected - sustained shift from target")
+                st.warning(f"{len(result.alerts)} CUSUM signal(s) detected - sustained shift from target")
 
         st.markdown("---")
 
     # Educational note
-    with st.expander("ℹ️ Understanding Control Charts"):
+    with st.expander("Understanding Control Charts"):
         st.markdown("""
         **I-MR (Individuals and Moving Range) Chart:**
         - Best for low-volume manufacturing where individual measurements are taken
@@ -473,11 +485,11 @@ def render_capability(batch_df):
 
     # Capability interpretation
     if result.ppk >= 1.33:
-        st.success("✅ Process is capable (Ppk ≥ 1.33)")
+        st.success("Process is capable (Ppk ≥ 1.33)")
     elif result.ppk >= 1.0:
-        st.warning("⚠️ Process is marginally capable (1.0 ≤ Ppk < 1.33)")
+        st.warning("Process is marginally capable (1.0 ≤ Ppk < 1.33)")
     else:
-        st.error("❌ Process is not capable (Ppk < 1.0)")
+        st.error("Process is not capable (Ppk < 1.0)")
 
     # Histogram
     fig = create_capability_histogram(values, result, f"Capability Analysis: {metric}")
@@ -531,7 +543,7 @@ def render_trends_drivers(batch_df):
     st.markdown('<p class="sub-header">Time-series trends and key performance drivers</p>', unsafe_allow_html=True)
 
     # Time series trends
-    st.subheader("📈 Metric Trends Over Time")
+    st.subheader("Metric Trends Over Time")
 
     metric_cols = ["yield_pct", "viability_pct", "potency_proxy", "impurity_pct"]
     selected_metrics = st.multiselect("Select metrics to analyze:", metric_cols, default=["yield_pct"])
@@ -545,6 +557,7 @@ def render_trends_drivers(batch_df):
             import plotly.express as px
             fig = px.line(daily_data, x="batch_date", y=metric, color="site",
                           title=f"{metric} Trend by Site", markers=True)
+            apply_chart_style(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Trend summary table
@@ -556,7 +569,7 @@ def render_trends_drivers(batch_df):
     st.markdown("---")
 
     # Driver analysis
-    st.subheader("🔍 Driver Analysis")
+    st.subheader("Driver Analysis")
     st.markdown("Identifying factors that influence yield performance")
 
     target = st.selectbox("Target metric:", ["yield_pct", "viability_pct", "potency_proxy"])
@@ -596,7 +609,7 @@ def render_trends_drivers(batch_df):
 
     # Group comparison
     st.markdown("---")
-    st.subheader("📊 Group Comparisons")
+    st.subheader("Group Comparisons")
 
     compare_by = st.selectbox("Compare by:", ["site", "product", "shift"])
     comparison = compare_groups(batch_df, "yield_pct", compare_by)
@@ -624,7 +637,7 @@ def render_about():
     how modern analytics tools can support process monitoring, quality control,
     and continuous improvement in manufacturing environments.
 
-    **⚠️ Important:** This dashboard uses **entirely synthetic data** and is not
+    **Important:** This dashboard uses **entirely synthetic data** and is not
     connected to any real manufacturing processes. It is intended for educational
     and demonstration purposes only.
 
@@ -720,17 +733,17 @@ def main():
     filtered_step = apply_filters(step_df, products, sites, date_range, shifts)
 
     # Render selected page
-    if page == "📊 Overview":
+    if page == PAGE_OVERVIEW:
         render_overview(filtered_batch, filtered_step)
-    elif page == "🔍 Batch Explorer":
+    elif page == PAGE_BATCH_EXPLORER:
         render_batch_explorer(filtered_batch, filtered_step)
-    elif page == "📈 SPC / Control Charts":
+    elif page == PAGE_SPC:
         render_spc_charts(filtered_batch, filtered_step)
-    elif page == "🎯 Capability Analysis":
+    elif page == PAGE_CAPABILITY:
         render_capability(filtered_batch)
-    elif page == "📉 Trends & Drivers":
+    elif page == PAGE_TRENDS:
         render_trends_drivers(filtered_batch)
-    elif page == "ℹ️ About":
+    elif page == PAGE_ABOUT:
         render_about()
 
 
