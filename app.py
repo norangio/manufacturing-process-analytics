@@ -52,8 +52,22 @@ st.set_page_config(
 # Custom CSS for professional styling
 CUSTOM_CSS = """
 <style>
-    .stApp, .stApp * {{
+    .stApp {{
         font-family: {font_family};
+    }}
+    .stApp input,
+    .stApp textarea {{
+        font-family: {font_family};
+    }}
+    .material-symbols-rounded,
+    .material-symbols-outlined,
+    [data-testid="stIconMaterial"] {{
+        font-family: "Material Symbols Rounded" !important;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
     }}
     .main-header {{
         font-size: 2.2rem;
@@ -527,10 +541,18 @@ def render_capability(batch_df):
 
     if cap_results:
         cap_df = pd.DataFrame(cap_results)
+        display_cap_df = cap_df.sort_values(["Ppk", "Product", "Site"], ascending=[False, True, True]).copy()
         st.dataframe(
-            cap_df.style.background_gradient(subset=["Ppk"], cmap="RdYlGn", vmin=0.5, vmax=2.0),
+            display_cap_df,
             hide_index=True,
-            use_container_width=True
+            use_container_width=True,
+            column_config={
+                "n": st.column_config.NumberColumn("Count", format="%d"),
+                "Mean": st.column_config.NumberColumn("Mean", format="%.2f"),
+                "Std": st.column_config.NumberColumn("Std", format="%.2f"),
+                "Ppk": st.column_config.NumberColumn("Ppk", format="%.2f"),
+                "Within Spec %": st.column_config.NumberColumn("Within Spec %", format="%.1f%%"),
+            }
         )
 
         # Heatmap
